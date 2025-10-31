@@ -14,6 +14,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -32,21 +33,31 @@ class MainActivity : ComponentActivity() {
             val pathData = remember {
                 mutableStateOf(PathData())
             }
+            val pathList = remember {
+                mutableStateListOf(PathData())
+            }
             PaintTheme {
                 Column {
-                    PaintCanvas(pathData)
+                    PaintCanvas(pathData, pathList)
                     BottomPanel(
                         { color ->
                             pathData.value = pathData.value.copy(
                                 color = color
                             )
 
+                        },
+                        {lineWidth ->
+                            pathData.value = pathData.value.copy(
+                                lineWidth = lineWidth
+                            )
                         }
-                    ){lineWidth ->
-                        pathData.value = pathData.value.copy(
-                            lineWidth = lineWidth
-                        )
+                    ){
+                        pathList.removeIf { pathD ->
+                            pathList[pathList.size - 1] == pathD//сравнение совпадений (для удаления дубликатов)
+                        } //отмена последнего (удаление из массива)
+
                     }
+
                 }
             }
         }
@@ -57,28 +68,27 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun PaintCanvas(pathData1: MutableState<PathData>) {
+fun PaintCanvas(pathData1: MutableState<PathData>, pathList: SnapshotStateList<PathData>) {
     var tempPath = Path()
-    val pathList = remember {
-        mutableStateListOf(PathData())
-    }
+
 
     Canvas(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.75f)
+            .fillMaxHeight(0.7f)
             .pointerInput(true){
                 detectDragGestures( //обработка пути при каждом касании
                     onDragStart = {
-                        tempPath = Path()
+                        tempPath = Path() //добавление при рисовании
                     },
                     onDragEnd = {
                         pathList.add( //для каждой линии один data класс
                             pathData1.value.copy(
-                                path = tempPath
+                                path = tempPath //добавление при завершении
                             )
                         )
                     }
+                    //последний элемент дублируется
                 ) { change, dragAmount ->
                     tempPath.moveTo(
                         change.position.x - dragAmount.x,
