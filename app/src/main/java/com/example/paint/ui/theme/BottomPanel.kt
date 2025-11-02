@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Slider
@@ -29,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
@@ -38,17 +40,23 @@ fun BottomPanel(
     onLineWidthChange: (Float) -> Unit,
     onBackClick: () -> Unit
     ) {
+    //состояние для отображения палитры
+    var showColorPalette by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier.fillMaxWidth()
             .background(Color.LightGray),
         horizontalAlignment = Alignment.CenterHorizontally
     ){
-        ButtonPanel {
-            onBackClick()
-        }
-        ColorList{ color ->
-            onClick(color)
+        ButtonPanel (
+            modifier = Modifier.padding(vertical = 8.dp),
+            onBackClick = onBackClick,
+            onColorToggle = { showColorPalette = !showColorPalette }
+        )
+        if (showColorPalette) {
+            ColorList{ color ->
+                onClick(color)
 
+            }
         }
         CustomSlider{ lineWidth ->
             onLineWidthChange(lineWidth)
@@ -64,7 +72,8 @@ fun ColorList(onClick: (Color) -> Unit){
         Color.Red,
         Color.Yellow,
         Color.Green,
-        Color.Black
+        Color.Black,
+        Color.White
     )
     LazyRow(modifier = Modifier.padding(10.dp))
     {
@@ -88,7 +97,12 @@ fun CustomSlider(onChange: (Float) -> Unit){
     var position by remember {
         mutableStateOf(0.05f)
     }
-    Column(horizontalAlignment = Alignment.CenterHorizontally){
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ){
         Text("Line width: ${(position * 100).toInt()}")
         Slider(
             value = position,
@@ -101,20 +115,41 @@ fun CustomSlider(onChange: (Float) -> Unit){
     }
 }
 @Composable
-fun ButtonPanel(onClick: () -> Unit){
-    Row (
-        modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp),
-        horizontalArrangement = Arrangement.SpaceBetween){
+fun ButtonPanel(
+    modifier: Modifier = Modifier,
+    onBackClick: () -> Unit,
+    onColorToggle: () -> Unit
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 20.dp, end = 20.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        // Кнопка "Назад"
         IconButton(
-            modifier = Modifier.clip(CircleShape).background(Color.White),
-            onClick = {
-            onClick()
-        }) {
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(Color.White),
+            onClick = onBackClick
+        ) {
             Icon(
                 Icons.Default.ArrowBack,
-                contentDescription = null
+                contentDescription = "Undo"
             )
         }
 
+        // Новая кнопка для показа/скрытия палитры цветов
+        IconButton(
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(Color.White),
+            onClick = onColorToggle
+        ) {
+            Icon(
+                Icons.Default.Create,
+                contentDescription = "Color palette"
+            )
+        }
     }
 }

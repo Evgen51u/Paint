@@ -52,6 +52,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     ){
+                        // действие для кнопки "Назад"
                         pathList.removeIf { pathD ->
                             pathList[pathList.size - 1] == pathD//сравнение совпадений (для удаления дубликатов)
                         } //отмена последнего (удаление из массива)
