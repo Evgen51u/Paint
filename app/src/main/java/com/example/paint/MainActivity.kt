@@ -50,14 +50,19 @@ class MainActivity : ComponentActivity() {
                             pathData.value = pathData.value.copy(
                                 lineWidth = lineWidth
                             )
-                        }
-                    ){
-                        // действие для кнопки "Назад"
+                        },
+                    {
                         pathList.removeIf { pathD ->
                             pathList[pathList.size - 1] == pathD//сравнение совпадений (для удаления дубликатов)
                         } //отмена последнего (удаление из массива)
 
+                    },
+                    { // Новый обработчик для Save
+                        // Здесь будет логика сохранения рисунка
+                        // Например: saveDrawingToGallery(pathList)
+                        println("Save button clicked!")
                     }
+                    )
 
                 }
             }
