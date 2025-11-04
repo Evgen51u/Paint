@@ -67,9 +67,13 @@ fun BottomPanel(
             ButtonPanel(
                 onBackClick = onBackClick,
                 onColorToggle = { showColorPalette = !showColorPalette },
-                onSaveClick = onSaveClick,
+                onSaveClick = { format ->
+                    // Заглушка пока
+                    println("Пользователь выбрал сохранение как $format")
+                },
                 onEraserClick = onEraserClick
             )
+
         }
 
         // ───────────────────────────────
@@ -175,9 +179,11 @@ fun CustomSlider(
 fun ButtonPanel(
     onBackClick: () -> Unit,
     onColorToggle: () -> Unit,
-    onSaveClick: () -> Unit,
+    onSaveClick: (String) -> Unit, // теперь принимаем формат
     onEraserClick: () -> Unit
 ) {
+    var showSaveMenu by remember { mutableStateOf(false) }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -203,13 +209,35 @@ fun ButtonPanel(
         }
 
         // 💾 Кнопка "Сохранить"
-        IconButton(
-            modifier = Modifier
-                .clip(CircleShape)
-                .background(Color.White),
-            onClick = onSaveClick
-        ) {
-            Icon(Icons.Default.Share, contentDescription = "Save drawing")
+        Box {
+            IconButton(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(Color.White),
+                onClick = { showSaveMenu = true }
+            ) {
+                Icon(Icons.Default.Share, contentDescription = "Save drawing")
+            }
+
+            androidx.compose.material3.DropdownMenu(
+                expanded = showSaveMenu,
+                onDismissRequest = { showSaveMenu = false }
+            ) {
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text("Сохранить как PNG") },
+                    onClick = {
+                        showSaveMenu = false
+                        onSaveClick("png")
+                    }
+                )
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text("Сохранить как SVG") },
+                    onClick = {
+                        showSaveMenu = false
+                        onSaveClick("svg")
+                    }
+                )
+            }
         }
 
         // 🧽 Кнопка "Ластик"
@@ -221,6 +249,6 @@ fun ButtonPanel(
         ) {
             Icon(Icons.Default.Delete, contentDescription = "Eraser")
         }
-
     }
 }
+
