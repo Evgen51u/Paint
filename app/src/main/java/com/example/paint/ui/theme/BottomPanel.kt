@@ -20,6 +20,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Undo
+import androidx.compose.material.icons.filled.AutoFixOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Slider
@@ -195,7 +197,7 @@ fun ButtonPanel(
                 .background(Color.White),
             onClick = onBackClick
         ) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Undo")
+            Icon(Icons.Default.Undo, contentDescription = "Undo")
         }
 
         // 🎨 Кнопка "Цвета"
@@ -247,7 +249,7 @@ fun ButtonPanel(
                 .background(Color.White),
             onClick = onEraserClick
         ) {
-            Icon(Icons.Default.Delete, contentDescription = "Eraser")
+            Icon(Icons.Default.AutoFixOff, contentDescription = "Eraser")
         }
     }
 }
