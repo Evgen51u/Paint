@@ -6,95 +6,97 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Alignment
 import com.example.paint.ui.theme.BottomPanel
 import com.example.paint.ui.theme.PaintTheme
 import com.example.paint.ui.theme.PathData
+import androidx.compose.ui.graphics.Color
+import androidx.activity.viewModels
+import com.example.paint.MainViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val pathData = remember {
-                mutableStateOf(PathData())
-            }
-            val pathList = remember {
-                mutableStateListOf(PathData())
-            }
+            //val pathData = remember { mutableStateOf(PathData()) }
+            //val pathList = remember { mutableStateListOf(PathData()) }
+
+            val viewModel: MainViewModel by viewModels()
+
             PaintTheme {
-                Column {
-                    PaintCanvas(pathData, pathList)
-                    BottomPanel(
-                        { color ->
-                            pathData.value = pathData.value.copy(
-                                color = color
-                            )
+                // Используем Box для наложения элементов
+                Box(modifier = Modifier.fillMaxSize()) {
 
-                        },
-                        {lineWidth ->
-                            pathData.value = pathData.value.copy(
-                                lineWidth = lineWidth
-                            )
-                        },
-                    {
-                        pathList.removeIf { pathD ->
-                            pathList[pathList.size - 1] == pathD//сравнение совпадений (для удаления дубликатов)
-                        } //отмена последнего (удаление из массива)
+                    // 🎨 Холст для рисования (нижний слой)
+                    PaintCanvas(viewModel.currentPathData, viewModel.pathList)
 
-                    },
-                    { // Новый обработчик для Save
-                        // Здесь будет логика сохранения рисунка
-                        // Например: saveDrawingToGallery(pathList)
-                        println("Save button clicked!")
+                    // 🧭 Панель управления (верхний слой)
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter) // приклеить к верху
+                            .padding(top = 40.dp)
+                    ) {
+                        BottomPanel(
+                            { color ->
+                                viewModel.currentPathData.value =
+                                    viewModel.currentPathData.value.copy(color = color)
+                            },
+                            { lineWidth ->
+                                viewModel.currentPathData.value =
+                                    viewModel.currentPathData.value.copy(lineWidth = lineWidth)
+                            },
+                            {
+                                if (viewModel.pathList.isNotEmpty()) {
+                                    viewModel.pathList.removeAt(viewModel.pathList.size - 1)
+                                }
+                            },
+                            {
+                                println("Save button clicked!")
+                            },
+                            {
+                                // 🧽 Ластик: просто меняем цвет на цвет фона
+                                viewModel.currentPathData.value =
+                                    viewModel.currentPathData.value.copy(color = Color(0xFFFFFBFE))
+                            }
+                        )
                     }
-                    )
-
                 }
             }
         }
     }
 }
 
-
-
-
 @Composable
 fun PaintCanvas(pathData1: MutableState<PathData>, pathList: SnapshotStateList<PathData>) {
     var tempPath = Path()
 
-
     Canvas(
         modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight(0.7f)
-            .pointerInput(true){
-                detectDragGestures( //обработка пути при каждом касании
+            .fillMaxSize()
+            .padding(top = 100.dp) // 👈 отступ, чтобы не рисовать по панели
+            .navigationBarsPadding()
+            .pointerInput(true) {
+                detectDragGestures(
                     onDragStart = {
-                        tempPath = Path() //добавление при рисовании
+                        tempPath = Path()
                     },
                     onDragEnd = {
-                        pathList.add( //для каждой линии один data класс
+                        pathList.add(
                             pathData1.value.copy(
-                                path = tempPath //добавление при завершении
+                                path = tempPath
                             )
                         )
                     }
-                    //последний элемент дублируется
                 ) { change, dragAmount ->
                     tempPath.moveTo(
                         change.position.x - dragAmount.x,
@@ -104,27 +106,28 @@ fun PaintCanvas(pathData1: MutableState<PathData>, pathList: SnapshotStateList<P
                         change.position.x,
                         change.position.y
                     )
-                    if (pathList.size > 0){ //очищаем лишнее, оставляя финальный класс
+
+                    if (pathList.size > 0) {
                         pathList.removeAt(pathList.size - 1)
                     }
-                    pathList.add( //при рисовании линия добавляется в pathList
+
+                    pathList.add(
                         pathData1.value.copy(
                             path = tempPath
                         )
                     )
-
                 }
             }
     ) {
-        pathList.forEach { pathData -> //цикл по очереди выдает все сохраненные пути
+        pathList.forEach { pathData ->
             drawPath(
                 pathData.path,
                 color = pathData.color,
-                style = Stroke(pathData.lineWidth,
-                    cap = StrokeCap.Round) //ширина пера и стиль
-
+                style = Stroke(
+                    pathData.lineWidth,
+                    cap = StrokeCap.Round
+                )
             )
         }
-
     }
 }

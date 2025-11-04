@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Slider
@@ -32,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -39,7 +41,8 @@ fun BottomPanel(
     onClick: (Color) -> Unit,
     onLineWidthChange: (Float) -> Unit,
     onBackClick: () -> Unit,
-    onSaveClick: () -> Unit
+    onSaveClick: () -> Unit,
+    onEraserClick: () -> Unit
 ) {
     // состояние для отображения палитры
     var showColorPalette by remember { mutableStateOf(false) }
@@ -52,7 +55,7 @@ fun BottomPanel(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // ───────────────────────────────
-        // Первый уровень: кнопки (в одной строке)
+        // Первый уровень: кнопки
         // ───────────────────────────────
         Row(
             modifier = Modifier
@@ -64,30 +67,38 @@ fun BottomPanel(
             ButtonPanel(
                 onBackClick = onBackClick,
                 onColorToggle = { showColorPalette = !showColorPalette },
-                onSaveClick = onSaveClick
+                onSaveClick = onSaveClick,
+                onEraserClick = onEraserClick
             )
         }
 
         // ───────────────────────────────
-        // Второй уровень: палитра и слайдер (на одном уровне, ниже)
+        // Второй уровень: палитра + слайдер (в одной строке)
         // ───────────────────────────────
         if (showColorPalette) {
             Spacer(modifier = Modifier.height(8.dp))
-            Column(
+
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                ColorList { color ->
-                    onClick(color)
-                }
+                // 🎨 Палитра цветов (слева)
+                ColorList(
+                    modifier = Modifier.weight(1f),
+                    onClick = { color -> onClick(color) }
+                )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                // ↔️ Небольшой отступ между палитрой и слайдером
+                Spacer(modifier = Modifier.width(8.dp))
 
-                CustomSlider { lineWidth ->
-                    onLineWidthChange(lineWidth)
-                }
+                // 🎚 Слайдер толщины линии (справа)
+                CustomSlider(
+                    modifier = Modifier.weight(1f),
+                    onChange = { lineWidth -> onLineWidthChange(lineWidth) }
+                )
             }
         }
 
@@ -95,10 +106,12 @@ fun BottomPanel(
     }
 }
 
-// настройка 1: выбор цвета
 @Composable
-fun ColorList(onClick: (Color) -> Unit) {
-    val colors = listOf( // массив цветов
+fun ColorList(
+    modifier: Modifier = Modifier,
+    onClick: (Color) -> Unit
+) {
+    val colors = listOf(
         Color.Blue,
         Color.Red,
         Color.Yellow,
@@ -106,18 +119,16 @@ fun ColorList(onClick: (Color) -> Unit) {
         Color.Black,
         Color.White
     )
+
     LazyRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
+        modifier = modifier
+            .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         items(colors) { color ->
-            Box( // контейнер
+            Box(
                 modifier = Modifier
-                    .padding(end = 10.dp)
-                    .clickable {
-                        onClick(color)
-                    }
+                    .padding(end = 8.dp)
+                    .clickable { onClick(color) }
                     .size(40.dp)
                     .background(color, CircleShape)
             )
@@ -126,13 +137,25 @@ fun ColorList(onClick: (Color) -> Unit) {
 }
 
 @Composable
-fun CustomSlider(onChange: (Float) -> Unit) {
-    var position by remember {
-        mutableStateOf(0.05f)
-    }
+fun CustomSlider(
+    modifier: Modifier = Modifier,
+    onChange: (Float) -> Unit
+) {
+    var position by remember { mutableStateOf(0.05f) }
+
+    val configuration = LocalConfiguration.current
+    val isLandscape =
+        configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
+    val sliderWidth = if (isLandscape)
+        (configuration.screenWidthDp.dp * 0.5f)
+    else
+        (configuration.screenWidthDp.dp * 0.3f)
+
     Column(
-        modifier = Modifier
-            .width(200.dp), // Фиксированная ширина для слайдера
+        modifier = modifier
+            .width(sliderWidth)
+            .padding(horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Width: ${(position * 100).toInt()}")
@@ -152,49 +175,52 @@ fun CustomSlider(onChange: (Float) -> Unit) {
 fun ButtonPanel(
     onBackClick: () -> Unit,
     onColorToggle: () -> Unit,
-    onSaveClick: () -> Unit // параметр для сохранения
+    onSaveClick: () -> Unit,
+    onEraserClick: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp) // Отступ между кнопками
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Кнопка "Назад"
+        // ↩ Кнопка "Назад"
         IconButton(
             modifier = Modifier
                 .clip(CircleShape)
                 .background(Color.White),
             onClick = onBackClick
         ) {
-            Icon(
-                Icons.Default.ArrowBack,
-                contentDescription = "Undo"
-            )
+            Icon(Icons.Default.ArrowBack, contentDescription = "Undo")
         }
 
-        // Кнопка "Цвета"
+        // 🎨 Кнопка "Цвета"
         IconButton(
             modifier = Modifier
                 .clip(CircleShape)
                 .background(Color.White),
             onClick = onColorToggle
         ) {
-            Icon(
-                Icons.Default.Create,
-                contentDescription = "Color palette"
-            )
+            Icon(Icons.Default.Create, contentDescription = "Color palette")
         }
 
-        // Кнопка "Сохранить"
+        // 💾 Кнопка "Сохранить"
         IconButton(
             modifier = Modifier
                 .clip(CircleShape)
                 .background(Color.White),
             onClick = onSaveClick
         ) {
-            Icon(
-                Icons.Default.Share,
-                contentDescription = "Save drawing"
-            )
+            Icon(Icons.Default.Share, contentDescription = "Save drawing")
         }
+
+        // 🧽 Кнопка "Ластик"
+        IconButton(
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(Color.White),
+            onClick = onEraserClick
+        ) {
+            Icon(Icons.Default.Delete, contentDescription = "Eraser")
+        }
+
     }
 }
