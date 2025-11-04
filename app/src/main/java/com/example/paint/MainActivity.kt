@@ -20,6 +20,7 @@ import com.example.paint.ui.theme.BottomPanel
 import com.example.paint.ui.theme.PaintTheme
 import com.example.paint.ui.theme.PathData
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clipToBounds
 import androidx.activity.viewModels
 import com.example.paint.MainViewModel
 
@@ -85,6 +86,7 @@ fun PaintCanvas(pathData1: MutableState<PathData>, pathList: SnapshotStateList<P
             .fillMaxSize()
             .padding(top = 100.dp) // 👈 отступ, чтобы не рисовать по панели
             .navigationBarsPadding()
+            .clipToBounds()           // 👈 чтобы линии не выходили за холст
             .pointerInput(true) {
                 detectDragGestures(
                     onDragStart = {
