@@ -58,7 +58,8 @@ class MainActivity : ComponentActivity() {
                             },
                             {
                                 if (viewModel.pathList.isNotEmpty()) {
-                                    viewModel.pathList.removeAt(viewModel.pathList.size - 1)
+                                    val last = viewModel.pathList.last()
+                                    viewModel.pathList.removeIf { it == last } // удаляем все дубликаты последнего
                                 }
                             },
                             {
@@ -98,6 +99,7 @@ fun PaintCanvas(pathData1: MutableState<PathData>, pathList: SnapshotStateList<P
                                 path = tempPath
                             )
                         )
+
                     }
                 ) { change, dragAmount ->
                     tempPath.moveTo(
@@ -109,8 +111,9 @@ fun PaintCanvas(pathData1: MutableState<PathData>, pathList: SnapshotStateList<P
                         change.position.y
                     )
 
-                    if (pathList.size > 0) {
-                        pathList.removeAt(pathList.size - 1)
+                    if (pathList.size > 0) { //0 было, 1 стало.
+                        //фикс бага #1
+                        //pathList.removeAt(pathList.size - 1)
                     }
 
                     pathList.add(
