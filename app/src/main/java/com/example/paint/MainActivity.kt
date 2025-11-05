@@ -68,7 +68,7 @@ class MainActivity : ComponentActivity() {
                             {
                                 // 🧽 Ластик: просто меняем цвет на цвет фона
                                 viewModel.currentPathData.value =
-                                    viewModel.currentPathData.value.copy(color = Color(0xFFFFFBFE))
+                                    viewModel.currentPathData.value.copy(color = Color(0xFFFAFAFA))
                             }
                         )
                     }
